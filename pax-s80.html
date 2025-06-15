@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>دستگاه کارتخوان PAX S80</title>
+    <link rel="stylesheet" href="pax-s80.css">
+    <link rel="icon" href="img/itmax-icon.png">
+    <script src="pax-s80.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="main-menu">
+            <img src="img/itmax-icon-removebg.png" alt="لوگوی برنامه" class="header-logo">
+            <button class="payment-button" onclick="connectToSerial()">اتصال به کارتخوان</button>
+            <button class="payment-button" id="sadaqeh-btn" onclick="showAmountMenu('صدقه')">صدقه</button>
+            <button class="payment-button" id="orphans-btn" onclick="showAmountMenu('کمک به ایتام')">کمک به ایتام</button>
+            <button class="payment-button" id="fitr-btn" onclick="showAmountMenu('فطریه')">فطریه</button>
+        </div>
+
+        <div id="amount-menu" style="display: none;">
+            <img src="img/itmax-icon-removebg.png" alt="لوگوی برنامه" class="header-logo">
+            <div class="header-text">انتخاب مبلغ برای <span id="payment-type"></span></div>
+            <button class="amount-button" onclick="selectPredefinedAmount(1000000)">1,000,000</button>
+            <button class="amount-button" onclick="selectPredefinedAmount(2000000)">2,000,000</button>
+            <button class="amount-button" onclick="selectPredefinedAmount(3000000)">3,000,000</button>
+            <button class="amount-button" onclick="showCustomAmount()">وارد کردن مبلغ دلخواه</button>
+            <button class="amount-button backspace-button" onclick="backToMainMenu()">بازگشت</button>
+        </div>
+
+        <div id="custom-amount" style="display: none;">
+            <img src="img/itmax-icon-removebg.png" alt="لوگوی برنامه" class="header-logo">
+            <div class="header-text">مبلغ مورد نظر را وارد کنید</div>
+            <input type="text" id="amount-input" readonly>
+            <div class="keyboard">
+                <button class="keyboard-button" onclick="appendNumber('1')">1</button>
+                <button class="keyboard-button" onclick="appendNumber('2')">2</button>
+                <button class="keyboard-button" onclick="appendNumber('3')">3</button>
+                <button class="keyboard-button" onclick="appendNumber('4')">4</button>
+                <button class="keyboard-button" onclick="appendNumber('5')">5</button>
+                <button class="keyboard-button" onclick="appendNumber('6')">6</button>
+                <button class="keyboard-button" onclick="appendNumber('7')">7</button>
+                <button class="keyboard-button" onclick="appendNumber('8')">8</button>
+                <button class="keyboard-button" onclick="appendNumber('9')">9</button>
+                <button class="keyboard-button backspace-button" onclick="backspace()">حذف</button>
+                <button class="keyboard-button" onclick="appendNumber('0')">0</button>
+                <button class="keyboard-button confirm-button" onclick="confirmCustomAmount()">تأیید</button>
+            </div>
+            <button class="amount-button backspace-button" onclick="backToAmountMenu()">بازگشت</button>
+        </div>
+
+        <div id="message"></div>
+
+        <div id="receipt" style="display: none;">
+            <h1>رسید پرداخت</h1>
+            <p id="receipt-type"></p>
+            <p id="receipt-amount"></p>
+            <p id="receipt-date">تاریخ: </p>
+            <p id="receipt-status"></p>
+        </div>
+    </div>
+</body>
+</html>
