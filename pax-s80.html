@@ -2,9 +2,11 @@
 <html lang="fa">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دستگاه کارتخوان PAX S80</title>
     <link rel="stylesheet" href="pax-s80.css">
     <link rel="icon" href="img/itmax-icon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="pax-s80.js"></script>
 </head>
 <body>
@@ -48,14 +50,21 @@
             <button class="amount-button backspace-button" onclick="backToAmountMenu()">بازگشت</button>
         </div>
 
-        <div id="message"></div>
+        <div id="status-message"></div>
 
         <div id="receipt" style="display: none;">
+            <div class="receipt-header">
+                <span id="receipt-time" class="receipt-time"></span>
+                <span id="receipt-date-weekday" class="receipt-date-weekday"></span>
+            </div>
+            <img id="receipt-image" src="" alt="رسید پرداخت" style="display: none;">
+            <h2 id="receipt-status-message"></h2>
             <h1>رسید پرداخت</h1>
             <p id="receipt-type"></p>
             <p id="receipt-amount"></p>
-            <p id="receipt-date">تاریخ: </p>
             <p id="receipt-status"></p>
+            <p id="receipt-quote" class="receipt-quote"></p>
+            <button class="amount-button backspace-button" onclick="backToMainMenu()">بازگشت</button>
         </div>
     </div>
 </body>

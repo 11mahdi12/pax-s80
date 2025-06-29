@@ -47,6 +47,50 @@ h1 {
     font-weight: bold;
 }
 
+.receipt-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.receipt-time {
+    font-size: 16px;
+    font-weight: bold;
+    color: #374151;
+}
+
+.receipt-date-weekday {
+    font-size: 16px;
+    font-weight: bold;
+    color: #374151;
+}
+
+#receipt-status-message {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #10b981;
+}
+
+#receipt-status-message.error {
+    color: #ef4444;
+}
+
+#receipt-image {
+    display: none;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.receipt-quote {
+    text-align: center;
+    font-size: 14px;
+    font-style: italic;
+    color: #374151;
+    margin-top: 16px;
+}
+
 .payment-button, .amount-button, .keyboard-button {
     display: block;
     width: 100%;
@@ -75,7 +119,7 @@ h1 {
     transform: scale(0.95);
 }
 
-#message {
+#status-message {
     text-align: center;
     margin-top: 16px;
     color: #374151;
@@ -138,12 +182,16 @@ h1 {
     #receipt, #receipt * {
         visibility: visible;
     }
-    #receipt {
+    #receipt-image {
+        visibility: visible;
+        display: block;
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        text-align: center;
+    }
+    #receipt .receipt-header, #receipt-status-message, #receipt-type, #receipt-amount, #receipt-date, #receipt-status, #receipt-quote {
+        visibility: visible;
     }
 }
 
@@ -159,5 +207,8 @@ h1 {
     #amount-input {
         font-size: 16px;
         padding: 10px;
+    }
+    .receipt-time, .receipt-date-weekday {
+        font-size: 14px;
     }
 }

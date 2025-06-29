@@ -1,3 +1,58 @@
+// تنظیمات برنامه
+const config = {
+    quotes: [
+        "«خداوند به کسانی که در راه خیر قدم برمی‌دارند، برکت می‌دهد.»",
+        "«چو نیکی کنی، نیکی به تو بازگردد.»",
+        "«سعادت آن است که دیگران را خوشحال کنی.» - سعدی",
+        "«دست که دادی، دل نیز بده.»",
+        "«هر که خیر دیگران خواهد، خیرش به او بازآید.»"
+    ],
+    messages: {
+        connected: "متصل به کارتخوان PAX S80!",
+        disconnected: "اتصال کارتخوان قطع شد.",
+        invalidAmount: "لطفاً مبلغ معتبر وارد کنید!",
+        minAmountError: "مبلغ نمی‌تواند کمتر از 10,000 ریال باشد!",
+        connectionError: "خطا در اتصال به کارتخوان: ",
+        paymentError: "خطا در پرداخت: ",
+        timeoutError: "مهلت پاسخ دستگاه تمام شد",
+        noResponse: "اتصال قطع شد یا پاسخی دریافت نشد!",
+        processingPayment: (amount, type) => `لطفاً کارت خود را وارد کنید...\nدر حال پردازش پرداخت ${amount.toLocaleString('fa-IR')} تومان برای ${type}...`,
+        paymentSuccess: "پرداخت موفق! در حال چاپ رسید...",
+        paymentFailed: "خطا در پرداخت! لطفاً دوباره تلاش کنید.",
+        elementNotFound: "خطا در دسترسی به عناصر صفحه!",
+        customAmountError: "خطا در نمایش صفحه مبلغ دلخواه!",
+        amountMenuError: "خطا در بازگشت به منوی مبالغ!"
+    },
+    minAmount: 10000,
+    serialConfig: {
+        baudRate: 115200,
+        dataBits: 8,
+        stopBits: 1,
+        parity: 'none'
+    },
+    timeout: 5000
+};
+
+// ذخیره عناصر DOM برای دسترسی سریع
+const elements = {
+    mainMenu: document.querySelector('#main-menu'),
+    amountMenu: document.querySelector('#amount-menu'),
+    customAmount: document.querySelector('#custom-amount'),
+    receipt: document.querySelector('#receipt'),
+    statusMessage: document.querySelector('#status-message'),
+    paymentType: document.querySelector('#payment-type'),
+    amountInput: document.querySelector('#amount-input'),
+    receiptType: document.querySelector('#receipt-type'),
+    receiptAmount: document.querySelector('#receipt-amount'),
+    receiptDate: document.querySelector('#receipt-date'),
+    receiptStatus: document.querySelector('#receipt-status'),
+    receiptStatusMessage: document.querySelector('#receipt-status-message'),
+    receiptImage: document.querySelector('#receipt-image'),
+    receiptTime: document.querySelector('#receipt-time'),
+    receiptDateWeekday: document.querySelector('#receipt-date-weekday'),
+    receiptQuote: document.querySelector('#receipt-quote')
+};
+
 let currentPaymentType = '';
 let serialPort = null;
 let isCardReaderConnected = false;
@@ -14,13 +69,12 @@ function enablePaymentButtons() {
     buttons.forEach(button => button.disabled = false);
 }
 
-// نمایش پیام خطا
-function showErrorMessage(messageText) {
-    const message = document.getElementById('message');
-    message.innerText = messageText;
+// نمایش پیام وضعیت
+function showStatusMessage(messageText) {
+    elements.statusMessage.textContent = messageText;
     setTimeout(() => {
-        message.innerText = '';
-    }, 2000);
+        elements.statusMessage.textContent = '';
+    }, 3000);
 }
 
 // فرمت‌بندی عدد با کاما و افزودن "ریال"
@@ -30,31 +84,39 @@ function formatNumberWithCommas(number) {
 
 // افزودن عدد به ورودی
 function appendNumber(number) {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
+    try {
+        let currentValue = elements.amountInput.value.replace(/[^0-9]/g, '');
+        currentValue += number;
+        elements.amountInput.value = formatNumberWithCommas(currentValue);
+    } catch (error) {
+        console.error('Error in appendNumber:', error);
+        showStatusMessage(config.messages.elementNotFound);
     }
-    const input = document.getElementById('amount-input');
-    let currentValue = input.value.replace(/[^0-9]/g, '');
-    currentValue += number;
-    input.value = formatNumberWithCommas(currentValue);
 }
 
 // حذف یک رقم از ورودی
 function backspace() {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
+    try {
+        let currentValue = elements.amountInput.value.replace(/[^0-9]/g, '');
+        currentValue = currentValue.slice(0, -1);
+        elements.amountInput.value = currentValue ? formatNumberWithCommas(currentValue) : '';
+    } catch (error) {
+        console.error('Error in backspace:', error);
+        showStatusMessage(config.messages.elementNotFound);
     }
-    const input = document.getElementById('amount-input');
-    let currentValue = input.value.replace(/[^0-9]/g, '');
-    currentValue = currentValue.slice(0, -1);
-    input.value = currentValue ? formatNumberWithCommas(currentValue) : '';
+}
+
+// بررسی پشتیبانی مرورگر از API سریال
+function isSerialSupported() {
+    return 'serial' in navigator;
 }
 
 // بررسی اتصال به کارتخوان PAX S80
 async function checkCardReaderConnection() {
     try {
+        if (!isSerialSupported()) {
+            throw new Error('مرورگر شما از API سریال پشتیبانی نمی‌کند.');
+        }
         const ports = await navigator.serial.getPorts();
         if (!serialPort && ports.length === 0) {
             isCardReaderConnected = false;
@@ -64,37 +126,28 @@ async function checkCardReaderConnection() {
 
         if (!serialPort && ports.length > 0) {
             serialPort = ports[0];
-            await serialPort.open({
-                baudRate: 115200,
-                dataBits: 8,
-                stopBits: 1,
-                parity: 'none'
-            });
+            await serialPort.open(config.serialConfig);
             isCardReaderConnected = true;
             enablePaymentButtons();
-            showErrorMessage('متصل به کارتخوان PAX S80!');
+            showStatusMessage(config.messages.connected);
             return true;
         }
 
-        if (serialPort) {
-            if (serialPort.readable && serialPort.writable) {
-                isCardReaderConnected = true;
-                enablePaymentButtons();
-                return true;
-            } else {
-                serialPort = null;
-                isCardReaderConnected = false;
-                disablePaymentButtons();
-                return await connectToSerial();
-            }
+        if (serialPort && serialPort.readable && serialPort.writable) {
+            isCardReaderConnected = true;
+            enablePaymentButtons();
+            return true;
+        } else {
+            serialPort = null;
+            isCardReaderConnected = false;
+            disablePaymentButtons();
+            return await connectToSerial();
         }
-
-        return false;
     } catch (error) {
         isCardReaderConnected = false;
         disablePaymentButtons();
-        showErrorMessage('خطا در بررسی اتصال کارتخوان: ' + error.message);
-        console.log('Error in checkCardReaderConnection:', error);
+        showStatusMessage(config.messages.connectionError + error.message);
+        console.error('Error in checkCardReaderConnection:', error);
         return false;
     }
 }
@@ -102,22 +155,20 @@ async function checkCardReaderConnection() {
 // اتصال به پورت سریال PAX S80
 async function connectToSerial() {
     try {
+        if (!isSerialSupported()) {
+            throw new Error('مرورگر شما از API سریال پشتیبانی نمی‌کند.');
+        }
         serialPort = await navigator.serial.requestPort();
-        await serialPort.open({
-            baudRate: 115200,
-            dataBits: 8,
-            stopBits: 1,
-            parity: 'none'
-        });
+        await serialPort.open(config.serialConfig);
         isCardReaderConnected = true;
         enablePaymentButtons();
-        showErrorMessage('متصل به کارتخوان PAX S80!');
+        showStatusMessage(config.messages.connected);
         return true;
     } catch (error) {
         isCardReaderConnected = false;
         disablePaymentButtons();
-        showErrorMessage('خطا در اتصال به کارتخوان: ' + error.message);
-        console.log('Error in connectToSerial:', error);
+        showStatusMessage(config.messages.connectionError + error.message);
+        console.error('Error in connectToSerial:', error);
         return false;
     }
 }
@@ -125,7 +176,7 @@ async function connectToSerial() {
 // ارسال داده به کارتخوان PAX S80
 async function sendToCardReader(amount, paymentType) {
     if (!serialPort || !isCardReaderConnected) {
-        showErrorMessage('ابتدا به کارتخوان متصل شوید!');
+        showStatusMessage(config.messages.connectionError + 'کارتخوان متصل نیست!');
         return false;
     }
 
@@ -141,13 +192,13 @@ async function sendToCardReader(amount, paymentType) {
 
         const reader = serialPort.readable.getReader();
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('مهلت پاسخ دستگاه تمام شد')), 5000);
+            setTimeout(() => reject(new Error(config.messages.timeoutError)), config.timeout);
         });
         const { value, done } = await Promise.race([reader.read(), timeoutPromise]);
         reader.releaseLock();
 
         if (done || !value) {
-            showErrorMessage('اتصال قطع شد یا پاسخی دریافت نشد!');
+            showStatusMessage(config.messages.noResponse);
             console.log('No response or connection closed');
             return false;
         }
@@ -157,179 +208,186 @@ async function sendToCardReader(amount, paymentType) {
         if (response.includes('APPROVED') || response.includes('00')) {
             return true;
         } else {
-            showErrorMessage('خطا در پرداخت: ' + response);
+            showStatusMessage(config.messages.paymentError + response);
             return false;
         }
     } catch (error) {
-        showErrorMessage('خطا در ارتباط با کارتخوان: ' + error.message);
-        console.log('Error in sendToCardReader:', error);
+        showStatusMessage(config.messages.connectionError + error.message);
+        console.error('Error in sendToCardReader:', error);
         return false;
     }
 }
 
 // بستن پورت سریال
 async function closeSerialPort() {
-    if (serialPort) {
-        await serialPort.close();
-        serialPort = null;
-        isCardReaderConnected = false;
-        disablePaymentButtons();
-        showErrorMessage('اتصال کارتخوان قطع شد.');
+    try {
+        if (serialPort) {
+            await serialPort.close();
+            serialPort = null;
+            isCardReaderConnected = false;
+            disablePaymentButtons();
+            showStatusMessage(config.messages.disconnected);
+        }
+    } catch (error) {
+        console.error('Error in closeSerialPort:', error);
+        showStatusMessage(config.messages.connectionError + error.message);
+    }
+}
+
+// تولید رسید پویا به‌صورت PNG
+async function generateReceiptImage() {
+    try {
+        const receiptElement = elements.receipt;
+        const canvas = await html2canvas(receiptElement, { scale: 2 });
+        elements.receiptImage.src = canvas.toDataURL('image/png');
+    } catch (error) {
+        console.error('Error in generateReceiptImage:', error);
+        showStatusMessage('خطا در تولید تصویر رسید!');
     }
 }
 
 // انتخاب مبالغ پیش‌فرض
 function selectPredefinedAmount(amount) {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
+    try {
+        if (amount < config.minAmount) {
+            showStatusMessage(config.messages.minAmountError);
+            return;
+        }
+        console.log('Processing predefined amount:', amount);
+        processPayment(amount / 10);
+    } catch (error) {
+        console.error('Error in selectPredefinedAmount:', error);
+        showStatusMessage(config.messages.elementNotFound);
     }
-    if (amount < 10000) {
-        showErrorMessage('مبلغ نمی‌تواند کمتر از 10,000 ریال باشد!');
-        return;
-    }
-    console.log('Processing predefined amount:', amount);
-    processPayment(amount / 10);
 }
 
 // پردازش پرداخت
 async function processPayment(amount) {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
-    }
+    try {
+        const now = new Date();
+        elements.statusMessage.textContent = config.messages.processingPayment(amount, currentPaymentType);
+        elements.receiptTime.textContent = `ساعت: ${now.toLocaleTimeString('fa-IR')}`;
+        elements.receiptDateWeekday.textContent = `${now.toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        elements.receiptQuote.textContent = config.quotes[Math.floor(Math.random() * config.quotes.length)];
 
-    const message = document.getElementById('message');
-    const receiptType = document.getElementById('receipt-type');
-    const receiptAmount = document.getElementById('receipt-amount');
-    const receiptDate = document.getElementById('receipt-date');
-    const receiptStatus = document.getElementById('receipt-status');
-
-    message.innerText = `لطفاً کارت خود را وارد کنید...\nدر حال پردازش پرداخت ${amount.toLocaleString('fa-IR')} تومان برای ${currentPaymentType}...`;
-
-    setTimeout(async () => {
         const isSuccess = await sendToCardReader(amount, currentPaymentType);
+        elements.receiptType.textContent = `نوع پرداخت: ${currentPaymentType}`;
+        elements.receiptAmount.textContent = `مبلغ: ${amount.toLocaleString('fa-IR')} تومان`;
+        elements.receiptDate.textContent = `تاریخ: ${now.toLocaleString('fa-IR')}`;
+
         if (isSuccess) {
-            message.innerText = 'پرداخت موفق! در حال چاپ رسید...';
-            receiptType.innerText = `نوع پرداخت: ${currentPaymentType}`;
-            receiptAmount.innerText = `مبلغ: ${amount.toLocaleString('fa-IR')} تومان`;
-            receiptDate.innerText = `تاریخ: ${new Date().toLocaleString('fa-IR')}`;
-            receiptStatus.innerText = 'پرداخت با موفقیت انجام شد.';
-            document.getElementById('receipt').style.display = 'block';
+            elements.statusMessage.textContent = config.messages.paymentSuccess;
+            elements.receiptStatusMessage.textContent = 'پرداخت موفق';
+            elements.receiptStatusMessage.classList.remove('error');
+            elements.receiptStatus.textContent = 'پرداخت با موفقیت انجام شد.';
+            elements.receipt.style.display = 'block';
+            await generateReceiptImage();
             setTimeout(() => {
                 window.print();
                 backToMainMenu();
             }, 2000);
         } else {
-            message.innerText = 'خطا در پرداخت! لطفاً دوباره تلاش کنید.';
-            receiptStatus.innerText = 'پرداخت ناموفق بود.';
+            elements.statusMessage.textContent = config.messages.paymentFailed;
+            elements.receiptStatusMessage.textContent = 'پرداخت ناموفق';
+            elements.receiptStatusMessage.classList.add('error');
+            elements.receiptStatus.textContent = 'پرداخت ناموفق بود.';
+            elements.receipt.style.display = 'block';
             setTimeout(() => {
-                message.innerText = '';
+                elements.statusMessage.textContent = '';
                 backToMainMenu();
             }, 2000);
         }
-    }, 6000);
+    } catch (error) {
+        console.error('Error in processPayment:', error);
+        showStatusMessage(config.messages.elementNotFound);
+    }
 }
 
+// نمایش منوی مبالغ
 function showAmountMenu(type) {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
-    }
-    console.log('نوع نمایش:', type);
-    const mainMenu = document.querySelector('#main-menu');
-    const amountMenu = document.querySelector('#amount-menu');
-    const paymentTypeEl = document.querySelector('#payment-type');
-    if (!mainMenu || !amountMenu || !paymentTypeEl) {
-        console.error('One or more elements not found in showAmountMenu');
-        return;
-    }
-    currentPaymentType = type;
-    mainMenu.style.display = 'none';
-    amountMenu.style.display = 'block';
-    paymentTypeEl.innerText = type;
-}
-
-function backToMainMenu() {
-    console.log('Back to main menu');
-    const amountMenu = document.querySelector('#amount-menu');
-    const customAmount = document.querySelector('#custom-amount');
-    const receipt = document.querySelector('#receipt');
-    const mainMenu = document.querySelector('#main-menu');
-    const message = document.querySelector('#message');
-    if (!amountMenu || !customAmount || !receipt || !mainMenu || !message) {
-        console.error('One or more elements not found in backToMainMenu');
-        return;
-    }
-    amountMenu.style.display = 'none';
-    customAmount.style.display = 'none';
-    receipt.style.display = 'none';
-    mainMenu.style.display = 'block';
-    message.innerText = '';
-}
-
-function showCustomAmount() {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
-    }
-    console.log('Showing custom amount page');
     try {
-        const amountMenu = document.querySelector('#amount-menu');
-        const customAmount = document.querySelector('#custom-amount');
-        const amountInput = document.querySelector('#amount-input');
-        if (!amountMenu || !customAmount || !amountInput) {
+        console.log('نوع نمایش:', type);
+        if (!elements.mainMenu || !elements.amountMenu || !elements.paymentType) {
+            throw new Error('One or more elements not found in showAmountMenu');
+        }
+        currentPaymentType = type;
+        elements.mainMenu.style.display = 'none';
+        elements.amountMenu.style.display = 'block';
+        elements.paymentType.textContent = type;
+    } catch (error) {
+        console.error('Error in showAmountMenu:', error);
+        showStatusMessage(config.messages.elementNotFound);
+    }
+}
+
+// بازگشت به منوی اصلی
+function backToMainMenu() {
+    try {
+        console.log('Back to main menu');
+        if (!elements.amountMenu || !elements.customAmount || !elements.receipt || !elements.mainMenu || !elements.statusMessage) {
+            throw new Error('One or more elements not found in backToMainMenu');
+        }
+        elements.amountMenu.style.display = 'none';
+        elements.customAmount.style.display = 'none';
+        elements.receipt.style.display = 'none';
+        elements.mainMenu.style.display = 'block';
+        elements.statusMessage.textContent = '';
+    } catch (error) {
+        console.error('Error in backToMainMenu:', error);
+        showStatusMessage(config.messages.elementNotFound);
+    }
+}
+
+// نمایش صفحه مبلغ دلخواه
+function showCustomAmount() {
+    try {
+        console.log('Showing custom amount page');
+        if (!elements.amountMenu || !elements.customAmount || !elements.amountInput) {
             throw new Error('One or more elements not found in showCustomAmount');
         }
-        amountMenu.style.display = 'none';
-        customAmount.style.display = 'block';
-        amountInput.value = '';
+        elements.amountMenu.style.display = 'none';
+        elements.customAmount.style.display = 'block';
+        elements.amountInput.value = '';
     } catch (error) {
-        console.error(error.message);
-        showErrorMessage('خطا در نمایش صفحه مبلغ دلخواه!');
+        console.error('Error in showCustomAmount:', error);
+        showStatusMessage(config.messages.customAmountError);
     }
 }
 
+// بازگشت به منوی مبالغ
 function backToAmountMenu() {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
-    }
-    console.log('Back to amount menu');
     try {
-        const customAmount = document.querySelector('#custom-amount');
-        const amountMenu = document.querySelector('#amount-menu');
-        const message = document.querySelector('#message');
-        if (!customAmount || !amountMenu || !message) {
+        console.log('Back to amount menu');
+        if (!elements.customAmount || !elements.amountMenu || !elements.statusMessage) {
             throw new Error('One or more elements not found in backToAmountMenu');
         }
-        customAmount.style.display = 'none';
-        amountMenu.style.display = 'block';
-        message.innerText = '';
+        elements.customAmount.style.display = 'none';
+        elements.amountMenu.style.display = 'block';
+        elements.statusMessage.textContent = '';
     } catch (error) {
-        console.error(error.message);
-        showErrorMessage('خطا در بازگشت به منوی مبالغ!');
+        console.error('Error in backToAmountMenu:', error);
+        showStatusMessage(config.messages.amountMenuError);
     }
 }
 
 // تأیید مبلغ دلخواه
 function confirmCustomAmount() {
-    if (!isCardReaderConnected) {
-        showErrorMessage('کارتخوان متصل نیست!');
-        return;
+    try {
+        const amount = parseInt(elements.amountInput.value.replace(/[^0-9]/g, ''));
+        if (isNaN(amount) || amount <= 0) {
+            showStatusMessage(config.messages.invalidAmount);
+            return;
+        }
+        if (amount < config.minAmount) {
+            showStatusMessage(config.messages.minAmountError);
+            return;
+        }
+        console.log('Processing custom amount:', amount);
+        processPayment(amount / 10);
+    } catch (error) {
+        console.error('Error in confirmCustomAmount:', error);
+        showStatusMessage(config.messages.elementNotFound);
     }
-    const input = document.getElementById('amount-input');
-    const amount = parseInt(input.value.replace(/[^0-9]/g, ''));
-    if (isNaN(amount) || amount <= 0) {
-        showErrorMessage('لطفاً مبلغ معتبر وارد کنید!');
-        return;
-    }
-    if (amount < 10000) {
-        showErrorMessage('مبلغ نمی‌تواند کمتر از 10,000 ریال باشد!');
-        return;
-    }
-    console.log('Processing custom amount:', amount);
-    processPayment(amount / 10);
 }
 
 // بررسی اتصال هنگام بارگذاری صفحه
