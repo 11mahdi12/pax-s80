@@ -179,19 +179,27 @@ h1 {
     body * {
         visibility: hidden;
     }
-    #receipt, #receipt * {
+    #success-recept, #success-recept *, #failed-recept, #failed-recept * {
         visibility: visible;
     }
-    #receipt-image {
+    #success-recept-image, #failed-recept-image {
         visibility: visible;
         display: block;
         position: absolute;
         top: 0;
-        left: 0;
-        width: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80mm; /* عرض استاندارد برای اکثر پرینترها */
+        max-width: 100%; /* جلوگیری از سرریز */
+        margin: 0;
     }
-    #receipt .receipt-header, #receipt-status-message, #receipt-type, #receipt-amount, #receipt-date, #receipt-status, #receipt-quote {
-        visibility: visible;
+    #success-recept, #failed-recept {
+        margin: 0;
+        padding: 10mm;
+        box-shadow: none;
+        border: none;
+        width: 100%;
+        max-width: 80mm; /* سازگار با کاغذهای استاندارد */
     }
 }
 
