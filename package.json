@@ -1,0 +1,29 @@
+{
+     "name": "pax-s80-pos",
+     "version": "1.0.0",
+     "description": "POS Kiosk for PAX S80",
+     "main": "main.js",
+     "scripts": {
+       "start": "electron .",
+       "build": "electron-builder --win --x64"
+     },
+     "devDependencies": {
+       "electron": "^26.0.0",
+       "electron-builder": "^24.0.0"
+     },
+     "build": {
+       "appId": "com.itmax.paxs80",
+       "productName": "PAX S80 POS Kiosk",
+       "win": {
+         "target": "nsis",
+         "icon": "img/itmax-icon.png"
+       },
+       "files": [
+         "pax-s80.html",
+         "pax-s80.css",
+         "pax-s80.js",
+         "img/**/*",
+         "fonts/**/*"
+       ]
+     }
+   }
