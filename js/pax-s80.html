@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کیوسک پرداخت خیریه</title>
+    <link rel="stylesheet" href="pax-s80.css">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="pax-s80.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- صفحه اصلی -->
+        <div id="main-menu" class="screen">
+            <img src="img/itmax-icon.png" alt="لوگو" class="header-logo">
+            <h1>کیوسک پرداخت خیریه</h1>
+            <button id="connect-btn" class="payment-button">اتصال به کارتخوان</button>
+            <button id="sadaqeh-btn" class="payment-button" disabled>صدقه</button>
+            <button id="orphans-btn" class="payment-button" disabled>کمک به ایتام</button>
+            <button id="fitr-btn" class="payment-button" disabled>فطریه</button>
+            <div id="status-message"></div>
+        </div>
+
+        <!-- صفحه انتخاب مبلغ -->
+        <div id="amount-menu" class="screen">
+            <img src="logo.png" alt="لوگو" class="header-logo">
+            <h1>انتخاب مبلغ برای <span id="payment-type"></span></h1>
+            <button class="amount-button" data-amount="1000000">1,000,000 ریال</button>
+            <button class="amount-button" data-amount="2000000">2,000,000 ریال</button>
+            <button class="amount-button" data-amount="3000000">3,000,000 ریال</button>
+            <button id="custom-amount-btn" class="amount-button">مبلغ دلخواه</button>
+            <button id="back-to-main-btn" class="payment-button">بازگشت</button>
+        </div>
+
+        <!-- صفحه مبلغ دلخواه -->
+        <div id="custom-amount" class="screen">
+            <img src="logo.png" alt="لوگو" class="header-logo">
+            <h1>مبلغ مورد نظر را وارد کنید</h1>
+            <input type="text" id="amount-input" readonly>
+            <div class="keyboard">
+                <button class="keyboard-button" data-number="1">1</button>
+                <button class="keyboard-button" data-number="2">2</button>
+                <button class="keyboard-button" data-number="3">3</button>
+                <button class="keyboard-button" data-number="4">4</button>
+                <button class="keyboard-button" data-number="5">5</button>
+                <button class="keyboard-button" data-number="6">6</button>
+                <button class="keyboard-button" data-number="7">7</button>
+                <button class="keyboard-button" data-number="8">8</button>
+                <button class="keyboard-button" data-number="9">9</button>
+                <button id="backspace-btn" class="keyboard-button backspace-button">حذف</button>
+                <button class="keyboard-button" data-number="0">0</button>
+                <button id="confirm-amount-btn" class="keyboard-button confirm-button">تأیید</button>
+            </div>
+            <button id="back-to-amount-btn" class="payment-button">بازگشت</button>
+        </div>
+
+        <!-- رسید موفق -->
+        <div id="success-recept" class="screen receipt">
+            <img src="logo.png" alt="لوگو" class="receipt-logo">
+            <div class="receipt-header">
+                <span id="success-recept-time"></span>
+                <span id="success-recept-date-weekday"></span>
+            </div>
+            <div class="receipt-body">
+                <div class="receipt-item">
+                    <span>نوع پرداخت:</span>
+                    <span id="success-recept-type"></span>
+                </div>
+                <div class="receipt-item">
+                    <span>مبلغ:</span>
+                    <span id="success-recept-amount"></span>
+                </div>
+                <div class="receipt-item">
+                    <span>وضعیت:</span>
+                    <span id="success-recept-status"></span>
+                </div>
+                <div class="receipt-item">
+                    <span>پیام:</span>
+                    <span id="success-recept-status-message"></span>
+                </div>
+            </div>
+            <div class="receipt-footer">
+                <span id="success-recept-quote"></span>
+                <br>
+                IT MAX GROUP
+                <br>
+                021-88726669
+            </div>
+            <button id="success-back-btn" class="payment-button no-print">بازگشت به صفحه اصلی</button>
+        </div>
+
+        <!-- رسید ناموفق -->
+        <div id="failed-recept" class="screen receipt">
+            <img src="logo.png" alt="لوگو" class="receipt-logo">
+            <div class="receipt-header">
+                <span id="failed-recept-time"></span>
+                <span id="failed-recept-date-weekday"></span>
+            </div>
+            <div class="receipt-body">
+                <div class="receipt-item">
+                    <span>نوع پرداخت:</span>
+                    <span id="failed-recept-type"></span>
+                </div>
+                <div class="receipt-item">
+                    <span>مبلغ:</span>
+                    <span id="failed-recept-amount"></span>
+                </div>
+                <div class="receipt-item">
+                    <span>وضعیت:</span>
+                    <span id="failed-recept-status"></span>
+                </div>
+                <div class="receipt-item">
+                    <span>پیام:</span>
+                    <span id="failed-recept-status-message"></span>
+                </div>
+            </div>
+            <div class="receipt-footer">
+                <span id="failed-recept-quote"></span>
+                <br>
+                IT MAX GROUP
+                <br>
+                021-88726669
+            </div>
+            <button id="failed-back-btn" class="payment-button no-print">بازگشت به صفحه اصلی</button>
+        </div>
+    </div>
+</body>
+</html>
